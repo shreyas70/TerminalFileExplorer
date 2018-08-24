@@ -126,7 +126,7 @@ int main(int arc, char ** argv){
 
 
 
-        printf(" \t\t %d bytes ",S_stat.st_size);
+        printf(" \t %lld bytes ",S_stat.st_size);
     
 
         time_t t = S_stat.st_mtime;
@@ -136,12 +136,9 @@ int main(int arc, char ** argv){
         strftime(timbuf, sizeof(timbuf), "%c", &lt);
 
         cout << " " << timbuf << " ";
-
-
-
         cout << " " << S_password->pw_name << " ";
 
-        cout << " userID " << S_stat.st_uid << " ";
+       // cout << " userID " << S_stat.st_uid << " ";
 
         struct group *g= getgrgid(S_stat.st_gid);
         //S_password = getpwuid(S_stat.st_gid);
