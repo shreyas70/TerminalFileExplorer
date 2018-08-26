@@ -1,21 +1,12 @@
 
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <iomanip>
-#include <ctime>
-#include <sys/param.h>
-#include <stdio.h>
-#include <sys/dir.h>
-#include <iostream>
-#include <pwd.h>
-#include <unistd.h>
-#include <grp.h>
-#include <stdlib.h>
+
+
+#include "ls.h"
 
 using namespace std;
 
-int main(int arc, char ** argv){
+int myLS(){ //lists current directory
     DIR *directory; // to open directory
     struct dirent *S_dirent; //dirent stucture
     struct stat S_stat;
@@ -25,11 +16,10 @@ int main(int arc, char ** argv){
    if (getcwd(path, sizeof(path)) == NULL){
     cout << "Current path error" << endl;
    }
-   
+
 
     char fullpath [PATH_MAX];
-
-
+    
     directory=opendir(path);
 
     mode_t permission;
@@ -38,88 +28,84 @@ int main(int arc, char ** argv){
 
         snprintf(fullpath, sizeof(fullpath), "%s/%s", path, S_dirent->d_name);
 
-        
-
-        
-
         if (stat(fullpath,&S_stat) == -1) {
         //printf(stderr, "stat failed: %s\n", strerror(errno));
             printf("stat error");
             break;
         }
 
-        permission = S_stat.st_mode;
+        //printing permission 
+        {
 
-        if(S_ISDIR(permission)){
-            printf("d");
-        }
-        else{
-            printf("-");
-        }
+            permission = S_stat.st_mode;
 
-        if( permission & S_IRUSR){
-            printf("r");
-        }
-        else{
-            printf("-");
-        }
-        if( permission & S_IWUSR){
-            printf("w");
-        }
-        else{
-            printf("-");
-        }
-        if( permission & S_IXUSR){
-            printf("x");
-        }
-        else{
-            printf("-");
-        }
+            if(S_ISDIR(permission)){
+                printf("d");
+            }
+            else{
+                printf("-");
+            }
 
-
-        if( permission & S_IRGRP){
-            printf("r");
-        }
-        else{
-            printf("-");
-        }
-
-        if( permission & S_IWGRP){
-            printf("w");
-        }
-        else{
-            printf("-");
-        }
-        if( permission & S_IXGRP){
-            printf("x");
-        }
-        else{
-            printf("-");
-        }
-
-        if( permission & S_IROTH){
-            printf("r");
-        }
-        else{
-            printf("-");
-        }
-        if( permission & S_IWOTH){
-            printf("w");
-        }
-        else{
-            printf("-");
-        }
-        if( permission & S_IXOTH){
-            printf("x");
-        }
-        else{
-            printf("-");
-        }
-
-        
-        time_t S_time=S_stat.st_ctime;
+            if( permission & S_IRUSR){
+                printf("r");
+            }
+            else{
+                printf("-");
+            }
+            if( permission & S_IWUSR){
+                printf("w");
+            }
+            else{
+                printf("-");
+            }
+            if( permission & S_IXUSR){
+                printf("x");
+            }
+            else{
+                printf("-");
+            }
 
 
+            if( permission & S_IRGRP){
+                printf("r");
+            }
+            else{
+                printf("-");
+            }
+
+            if( permission & S_IWGRP){
+                printf("w");
+            }
+            else{
+                printf("-");
+            }
+            if( permission & S_IXGRP){
+                printf("x");
+            }
+            else{
+                printf("-");
+            }
+
+            if( permission & S_IROTH){
+                printf("r");
+            }
+            else{
+                printf("-");
+            }
+            if( permission & S_IWOTH){
+                printf("w");
+            }
+            else{
+                printf("-");
+            }
+            if( permission & S_IXOTH){
+                printf("x");
+            }
+            else{
+                printf("-");
+            }
+
+        }
 
         struct passwd *S_password;
         S_password = getpwuid(S_stat.st_uid);
@@ -129,7 +115,8 @@ int main(int arc, char ** argv){
         printf(" \t %lld bytes ",S_stat.st_size);
     
 
-        time_t t = S_stat.st_mtime;
+        //time_t t = S_stat.st_mtime;
+        time_t S_time=S_stat.st_ctime;
         struct tm lt;
         localtime_r(&S_time, &lt);
         char timbuf[80];
@@ -145,7 +132,7 @@ int main(int arc, char ** argv){
         //cout << " " << S_password->pw_name << " ";
         cout << " " << g->gr_name << " " ;
         printf("\t %s ",S_dirent->d_name); 
-        printf("\n\n");
+        printf("\n");
 
     }
     closedir(directory);
