@@ -11,5 +11,11 @@
 #include <unistd.h>
 #include <grp.h>
 #include <stdlib.h>
+#include <vector>
+int myLS(char []);
 
-int myLS();
+void incrIndex();
+
+void decrIndex();
+
+void showSelectedDir();
