@@ -2,16 +2,33 @@
 #include "ls.h"
 using namespace std;
 
+struct history
+{
+    vector<string> list;
+    int curIndex;
+    
+};
+
+
 
 char currentPath[PATH_MAX];
 
 int curListLen=0;
 int currentViewTopIndex=0;
+int traverseFlag=0;
 int indexx=0; //the file on which cursor is present
-vector<string> vlist;
+vector<string> vlist; //list is directories
 int scrollingFlag=0; //1 for down,2  for up
 //list
 int currentViewTerminalLastRow=0;
+
+struct history dirHistory;
+void initializeHistory(){
+    dirHistory.curIndex=-1;
+}
+
+
+
 
 
 void setScrollingFlag(int a){
@@ -19,6 +36,10 @@ void setScrollingFlag(int a){
 }
 int getCurrentViewTerminalLastRow(){
     return currentViewTerminalLastRow;
+}
+
+void setTraverseFlag(){
+    traverseFlag=1; 
 }
 
 void incrIndex(){
@@ -79,7 +100,18 @@ char* getCurrentPath(){
 
 int myLS(char path[]){ //lists current directory
 
-    cout << "ls called!" << endl;
+
+    if(!traverseFlag){
+             //inserting to history
+    string s_path=string(path);
+    dirHistory.list.push_back(s_path);
+    dirHistory.curIndex++;
+    }
+
+   
+
+
+    //cout << "ls called!" << endl;
     DIR *directory; // to open directory
     struct dirent *S_dirent; //dirent stucture
     struct stat S_stat;
@@ -94,15 +126,15 @@ int myLS(char path[]){ //lists current directory
     }else{
         //do nothing
         //path is current path
-       path=currentPath;
+      // path=currentPath;
        strcpy(currentPath,path);
-       cout << "works! top " <<currentViewTopIndex <<endl;
+      //cout << "works! top " <<currentViewTopIndex <<endl;
 
     }
 
     vlist.clear();
 
-    
+
 
 
    //char path[PATH_MAX];
@@ -251,11 +283,11 @@ int myLS(char path[]){ //lists current directory
         printf("\033[0;0H"); //move cursoe to initial position
     }
     else{ 
-        //scrolling. keep pointer there, do nothing
         
-        if(scrollingFlag==1) // scrolling down
+        
+        if(scrollingFlag==1) // scrolling down.
             printf("\033[%d;0H",currentViewTerminalLastRow+1);
-        else if(scrollingFlag==2) // scrolling down
+        else if(scrollingFlag==2) // scrolling up
             printf("\033[0;0H");
 
         scrollingFlag=0;
@@ -267,8 +299,9 @@ int myLS(char path[]){ //lists current directory
     return 0;
 }
 
-
+//when enter is pressed
 void showSelectedDir(){
+
 
     char fullpath [PATH_MAX];
     if (*currentPath == NULL){
@@ -279,6 +312,8 @@ void showSelectedDir(){
     strcpy(fileName, s.c_str()); 
 
     snprintf(fullpath, sizeof(fullpath), "%s/%s", currentPath, fileName);
+
+
 
     struct stat S_stat;
     if (stat(fullpath,&S_stat) == -1) {
@@ -307,6 +342,20 @@ void showSelectedDir(){
     myLS(fullpath);
 
 }
+}
+
+
+void leftArrowPressed(){
+    setTraverseFlag();
+    if(dirHistory.curIndex > 0){
+        char path[PATH_MAX];
+        dirHistory.curIndex--;
+        string temp = dirHistory.list[dirHistory.curIndex];
+        strcpy(path,temp.c_str());
+        myLS(path);
+
+    }
+
 }
 
 

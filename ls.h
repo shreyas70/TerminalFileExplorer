@@ -4,6 +4,10 @@
 #include <unistd.h>
 #include <grp.h>
 #include <ctime>
+#include <vector>
+
+void leftArrowPressed();
+
 int myLS(char []);
 
 void incrIndex();
@@ -11,6 +15,8 @@ void incrIndex();
 void decrIndex();
 
 void showSelectedDir();
+
+void initializeHistory();
 
 int getCurrentViewTerminalLastRow();
 

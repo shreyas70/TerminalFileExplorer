@@ -2,13 +2,31 @@
 
 #include <sys/ioctl.h>
 #include <stdio.h>
+#include <vector>
+#include <iostream>
+using namespace std;
+
+struct history
+{
+	vector<string> list;
+	int curIndex;
+	
+};
 
 int main (void)
 {
-    struct winsize S_windowsize;
-    ioctl(0, TIOCGWINSZ, &S_windowsize);
+	struct history hq;
+	
+		
+	cout << hq.curIndex <<endl;
+	hq.list.push_back("1");
+	hq.list.push_back("2");
 
-    printf ("lines %d\n", w.ws_row);
-    printf ("columns %d\n", w.ws_col);
+	vector<string>::iterator it;
+
+	for(auto i=hq.list.begin();i!=hq.list.end();i++){
+		cout << *i << endl;
+	}
+
     return 0;
 }

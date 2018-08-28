@@ -18,13 +18,12 @@ int main(int argc, char const *argv[])
     if (getcwd(root, sizeof(root)) == NULL){
         cout << "Fetching root Path error" << endl;
     }
+    initializeHistory();
 
     myLS(root); //prints initial directory
     //currentPath=root;
     char c; //used to fetch char
     FILE* input;
-
-
 
 
 
@@ -57,6 +56,10 @@ int main(int argc, char const *argv[])
                 showSelectedDir();
                 //myLS(root+"showSelected"); 
                 
+            }
+            else if(c=='h' || c=='H'){
+                myLS(root);
+
             }
             else if(c=='\033'){
                 getc(input); 
@@ -123,8 +126,11 @@ int main(int argc, char const *argv[])
                break;
                 case 'C'://right
 
+
                 break;
                 case 'D'://left
+                //traverseFlag
+                leftArrowPressed();
 
                 break;
             }
