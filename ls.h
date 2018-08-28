@@ -1,17 +1,9 @@
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <iomanip>
-#include <ctime>
-#include <sys/param.h>
-#include <stdio.h>
-#include <sys/dir.h>
-#include <iostream>
+#include "utility.h"
 #include <pwd.h>
 #include <unistd.h>
 #include <grp.h>
-#include <stdlib.h>
-#include <vector>
+#include <ctime>
 int myLS(char []);
 
 void incrIndex();
@@ -19,3 +11,28 @@ void incrIndex();
 void decrIndex();
 
 void showSelectedDir();
+
+int getCurrentViewTerminalLastRow();
+
+void incrIndex();
+
+
+int getIndex();
+
+void decrIndex();
+
+int getCurListLen();
+
+int incrCurrentViewTopIndex();
+
+
+
+void decrCurrentViewTopIndex();
+
+int getCurrentViewTopIndex();
+
+char* getCurrentPath();
+
+void setScrollingFlag(int);
+
+
