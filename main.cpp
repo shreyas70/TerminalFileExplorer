@@ -6,6 +6,11 @@
 
 char root[PATH_MAX];
 
+
+char * getRoot(){
+    return root;
+}
+
 using namespace std;
 int main(int argc, char const *argv[])
 {
@@ -20,6 +25,7 @@ int main(int argc, char const *argv[])
     }
     initializeHistory();
 
+    addToHistory(root);
     myLS(root); //prints initial directory
     //currentPath=root;
     char c; //used to fetch char
@@ -125,12 +131,15 @@ int main(int argc, char const *argv[])
                }
                break;
                 case 'C'://right
+                rightArrowPressed();
+                
 
 
                 break;
                 case 'D'://left
                 //traverseFlag
                 leftArrowPressed();
+
 
                 break;
             }

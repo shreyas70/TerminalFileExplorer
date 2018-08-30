@@ -10,3 +10,5 @@
 #include <sys/ioctl.h>
 
 
+
+char * getRoot();

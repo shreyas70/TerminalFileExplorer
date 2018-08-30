@@ -6,7 +6,6 @@ struct history
 {
     vector<string> list;
     int curIndex;
-    
 };
 
 
@@ -28,8 +27,12 @@ void initializeHistory(){
 }
 
 
-
-
+//to handle boundary case. indexx=0 but need to add to history
+void addToHistory(char path[]){
+    string s_path=string(path);
+    dirHistory.list.push_back(s_path);
+    dirHistory.curIndex++;
+}
 
 void setScrollingFlag(int a){
     scrollingFlag=a; //1 for down, 2 for up
@@ -40,6 +43,10 @@ int getCurrentViewTerminalLastRow(){
 
 void setTraverseFlag(){
     traverseFlag=1; 
+}
+
+void resetTraverseFlag(){
+    traverseFlag=0; 
 }
 
 void incrIndex(){
@@ -103,12 +110,27 @@ int myLS(char path[]){ //lists current directory
 
     if(!traverseFlag){
              //inserting to history
-    string s_path=string(path);
-    dirHistory.list.push_back(s_path);
-    dirHistory.curIndex++;
+
+        if(indexx!=0 && indexx!=1){ // if . or .. is not pressed
+            string s_path=string(path);
+            dirHistory.list.push_back(s_path);
+            dirHistory.curIndex++;
+
+
+        }
+        else if(indexx==1){ // .. is pressed
+            dirHistory.curIndex--;
+
+        }
+
+        // if . is pressed, nothing is done.
+
+        
+    
+
     }
 
-   
+
 
 
     //cout << "ls called!" << endl;
@@ -127,12 +149,12 @@ int myLS(char path[]){ //lists current directory
         //do nothing
         //path is current path
       // path=currentPath;
-       strcpy(currentPath,path);
+     strcpy(currentPath,path);
       //cout << "works! top " <<currentViewTopIndex <<endl;
 
-    }
+ }
 
-    vlist.clear();
+ vlist.clear();
 
 
 
@@ -144,147 +166,147 @@ int myLS(char path[]){ //lists current directory
    // }
 
 
-    char fullpath [PATH_MAX];
-    directory=opendir(path);
-    mode_t permission;
+ char fullpath [PATH_MAX];
+ directory=opendir(path);
+ mode_t permission;
     // ** clear vector when traversing 
-    int i=0;
-    struct winsize S_windowsize;
-    ioctl(0, TIOCGWINSZ, &S_windowsize);
+ int i=0;
+ struct winsize S_windowsize;
+ ioctl(0, TIOCGWINSZ, &S_windowsize);
     //cout << S_windowsize.ws_col << endl;
-    while((S_dirent=readdir(directory))!=NULL){
-        
+ while((S_dirent=readdir(directory))!=NULL){
+
         //update current path
         //currentPath=path;
-        strcpy(currentPath,path);
+    strcpy(currentPath,path);
 
         //consider adding full path here
-        vlist.push_back(S_dirent->d_name);
+    vlist.push_back(S_dirent->d_name);
         //i++;
-        snprintf(fullpath, sizeof(fullpath), "%s/%s", path, S_dirent->d_name);
+    snprintf(fullpath, sizeof(fullpath), "%s/%s", path, S_dirent->d_name);
 
-        if(i>=currentViewTopIndex && i<((S_windowsize.ws_row)-1+currentViewTopIndex)){ 
+    if(i>=currentViewTopIndex && i<((S_windowsize.ws_row)-1+currentViewTopIndex)){ 
             //print only if visible. 
             //Otherwise just insert and find max length
 
-            if (stat(fullpath,&S_stat) == -1) {
+        if (stat(fullpath,&S_stat) == -1) {
         //printf(stderr, "stat failed: %s\n", strerror(errno));
-                printf("stat error");
-                break;
-            }
+            printf("stat error");
+            break;
+        }
 
         //printing permission 
-            {
+        {
 
-                permission = S_stat.st_mode;
+            permission = S_stat.st_mode;
 
-                if(S_ISDIR(permission)){
-                    printf("d");
-                }
-                else{
-                    printf("-");
-                }
-
-                if( permission & S_IRUSR){
-                    printf("r");
-                }
-                else{
-                    printf("-");
-                }
-                if( permission & S_IWUSR){
-                    printf("w");
-                }
-                else{
-                    printf("-");
-                }
-                if( permission & S_IXUSR){
-                    printf("x");
-                }
-                else{
-                    printf("-");
-                }
-
-
-                if( permission & S_IRGRP){
-                    printf("r");
-                }
-                else{
-                    printf("-");
-                }
-
-                if( permission & S_IWGRP){
-                    printf("w");
-                }
-                else{
-                    printf("-");
-                }
-                if( permission & S_IXGRP){
-                    printf("x");
-                }
-                else{
-                    printf("-");
-                }
-
-                if( permission & S_IROTH){
-                    printf("r");
-                }
-                else{
-                    printf("-");
-                }
-                if( permission & S_IWOTH){
-                    printf("w");
-                }
-                else{
-                    printf("-");
-                }
-                if( permission & S_IXOTH){
-                    printf("x");
-                }
-                else{
-                    printf("-");
-                }
-
+            if(S_ISDIR(permission)){
+                printf("d");
+            }
+            else{
+                printf("-");
             }
 
-            struct passwd *S_password;
-            S_password = getpwuid(S_stat.st_uid);
+            if( permission & S_IRUSR){
+                printf("r");
+            }
+            else{
+                printf("-");
+            }
+            if( permission & S_IWUSR){
+                printf("w");
+            }
+            else{
+                printf("-");
+            }
+            if( permission & S_IXUSR){
+                printf("x");
+            }
+            else{
+                printf("-");
+            }
 
-            printf(" \t %lld bytes ",S_stat.st_size);
+
+            if( permission & S_IRGRP){
+                printf("r");
+            }
+            else{
+                printf("-");
+            }
+
+            if( permission & S_IWGRP){
+                printf("w");
+            }
+            else{
+                printf("-");
+            }
+            if( permission & S_IXGRP){
+                printf("x");
+            }
+            else{
+                printf("-");
+            }
+
+            if( permission & S_IROTH){
+                printf("r");
+            }
+            else{
+                printf("-");
+            }
+            if( permission & S_IWOTH){
+                printf("w");
+            }
+            else{
+                printf("-");
+            }
+            if( permission & S_IXOTH){
+                printf("x");
+            }
+            else{
+                printf("-");
+            }
+
+        }
+
+        struct passwd *S_password;
+        S_password = getpwuid(S_stat.st_uid);
+
+        printf(" \t %lld bytes ",S_stat.st_size);
 
 
         //time_t t = S_stat.st_mtime;
-            time_t S_time=S_stat.st_ctime;
-            struct tm lt;
-            localtime_r(&S_time, &lt);
-            char timbuf[80];
-            strftime(timbuf, sizeof(timbuf), "%c", &lt);
+        time_t S_time=S_stat.st_ctime;
+        struct tm lt;
+        localtime_r(&S_time, &lt);
+        char timbuf[80];
+        strftime(timbuf, sizeof(timbuf), "%c", &lt);
 
-            cout << " " << timbuf << " ";
-            cout << " " << S_password->pw_name << " ";
+        cout << " " << timbuf << " ";
+        cout << " " << S_password->pw_name << " ";
 
        // cout << " userID " << S_stat.st_uid << " ";
 
-            struct group *g= getgrgid(S_stat.st_gid);
+        struct group *g= getgrgid(S_stat.st_gid);
         //S_password = getpwuid(S_stat.st_gid);
         //cout << " " << S_password->pw_name << " ";
-            cout << " " << g->gr_name << " " ;
-            printf("\t %s ",S_dirent->d_name); 
-            printf("\n");
-        }
-
-        i++;
-
+        cout << " " << g->gr_name << " " ;
+        printf("\t %s ",S_dirent->d_name); 
+        printf("\n");
     }
+
+    i++;
+
+}
     //cout << "while loop exited with i = " << i << endl;
-    curListLen=vlist.size();
-    currentViewTerminalLastRow=S_windowsize.ws_row-2;
+curListLen=vlist.size();
+currentViewTerminalLastRow=S_windowsize.ws_row-2;
 
     if(!scrollingFlag){ //new directory
         printf("\033[0;0H"); //move cursoe to initial position
     }
     else{ 
-        
-        
+
+
         if(scrollingFlag==1) // scrolling down.
             printf("\033[%d;0H",currentViewTerminalLastRow+1);
         else if(scrollingFlag==2) // scrolling up
@@ -301,6 +323,18 @@ int myLS(char path[]){ //lists current directory
 
 //when enter is pressed
 void showSelectedDir(){
+
+    //if .. is pressed in root dir nothing should happen
+    if(strcmp(currentPath,getRoot())==0 && indexx==1)
+        return;
+
+    //clearing if there is any unwanted stuff in history
+    if(!traverseFlag){ // always true
+        if(dirHistory.curIndex < dirHistory.list.size()-1){
+            dirHistory.list.erase(dirHistory.list.begin() + dirHistory.curIndex+1 ,dirHistory.list.end());
+        }
+
+    }
 
 
     char fullpath [PATH_MAX];
@@ -355,8 +389,26 @@ void leftArrowPressed(){
         myLS(path);
 
     }
+    resetTraverseFlag();
 
 }
+
+void rightArrowPressed(){
+    setTraverseFlag();
+    if(dirHistory.curIndex < dirHistory.list.size()-1){
+        char path[PATH_MAX];
+        dirHistory.curIndex++;
+        string temp = dirHistory.list[dirHistory.curIndex];
+        strcpy(path,temp.c_str());
+        myLS(path);
+    }
+    resetTraverseFlag();
+}
+
+
+
+
+
 
 
 

@@ -18,7 +18,13 @@ void showSelectedDir();
 
 void initializeHistory();
 
+void addToHistory(char []);
+
 int getCurrentViewTerminalLastRow();
+
+void rightArrowPressed();
+
+void resetTraverseFlag();
 
 void incrIndex();
 
