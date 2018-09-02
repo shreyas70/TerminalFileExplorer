@@ -10,6 +10,9 @@
 
 void leftArrowPressed();
 
+
+void exitCmdMode();
+
 int myLS(char []);
 
 void incrIndex();

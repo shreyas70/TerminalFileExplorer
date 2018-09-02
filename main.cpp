@@ -100,7 +100,8 @@ int main(int argc, char const *argv[])
                     decrCurrentViewTopIndex();
                     decrIndex();
                     setScrollingFlag(2);
-                    myLS("");
+                    char temp[PATH_MAX];
+                        myLS(temp);
                 }
                 else{
                     printf("\033[1A");
@@ -133,7 +134,8 @@ int main(int argc, char const *argv[])
                         incrIndex();
                         setScrollingFlag(1);
                         // cout << getCurrentPath() << endl;
-                        myLS("");
+                        char temp[PATH_MAX];
+                        myLS(temp);
 
                     }
                     else{
@@ -169,9 +171,14 @@ int main(int argc, char const *argv[])
               
                 while(1){
                     c= getc(input);
-                    if(c==27){
-                        cout << "Exiting cmd mode!";
-                        mode=0; 
+                    if(c==27){ //esc pressed
+
+                       // cout << "Exiting cmd mode!";
+                       mode=0; 
+                       cmd_buffer="";
+                       exitCmdMode();
+                        
+
                         break;
                     }
                     else if(c==127){

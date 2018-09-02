@@ -2,6 +2,7 @@
 #include "cmd.h"
 
 //send full path file name then send. Source to dest
+//This functions needs the destination file to exit
 int singleFileCopy ( char * source,  char* destination) {
 	std::ifstream  from(source, std::ios::binary);
 	std::ofstream  to(destination, std::ios::binary);
@@ -46,11 +47,18 @@ int moveFile(char * path1, char* path2){
 	delete_file(path1); 
 
 }
+int moveDir(char * path1, char* path2){
+	copy_dir(path1,path2);
+	delete_dir(path1);
+}
+
 
 int snapShot(char * path, int outputFD){
 	DIR *directory; // to open directory
-	
 	directory=opendir(path);
+	if(directory==NULL){
+		return -1;
+	}
 
 	struct dirent *S_dirent; //dirent stucture
 	struct stat S_stat;
@@ -60,13 +68,16 @@ int snapShot(char * path, int outputFD){
 
 	string s=string(path);
 
-
-	//cout << endl; 
 	write(outputFD,"\n",sizeof("\n"));
 
 	//subtract root length the print
-	//cout << path <<" : " << endl; 
-	write(outputFD, path, strlen(path));
+	int rootLength = strlen(getRoot());
+	string truncated = string(path);
+	cout << rootLength << ' ';
+
+	char temp[PATH_MAX];
+	strcpy(temp,truncated.substr(rootLength).c_str());
+	write(outputFD, temp, strlen(temp));
 	write(outputFD,":",strlen(":"));
 	write(outputFD,"\n",strlen("\n"));
 
@@ -210,8 +221,10 @@ int copy_dir(char * path1, char * destination){
 
 // }
 
-	// int main()
+	//  int main()
 	// {
+
+	//	moveDir();
 	//singleFileCopy("","");
    // createFile("/Users/shreyas/Downloads/VB/GitHub/TerminalFileExplorer/created.txt");
 

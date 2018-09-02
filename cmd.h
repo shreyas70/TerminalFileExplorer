@@ -17,6 +17,8 @@ int delete_file(char *path);
 
 int delete_empty_dir(char *path);
 
+int moveDir(char * path1, char* path2);
+
 int moveFile(char * path1, char* path2);
 
 int snapShot(char * path, int outputFD);

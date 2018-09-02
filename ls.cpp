@@ -19,6 +19,7 @@ int indexx=0; //the file on which cursor is present
 vector<string> directoryItems; //list is directories
 int scrollingFlag=0; //1 for down,2  for up
 //list
+int gotoFlag;
 int currentViewTerminalLastRow=0;
 
 struct history dirHistory;
@@ -96,11 +97,20 @@ int getCurrentViewTopIndex(){
 
 int myLS(char path[PATH_MAX]){ //lists given directory
 
+	if(scrollingFlag){
+		strcpy(path, dirHistory.list[dirHistory.curIndex].c_str());
+	}
+	//scrolling mode or cmd => path is current path
+	
+	DIR *directory; // to open directory
 
-	   //return 1;
+	char fullpath [PATH_MAX];
+	directory=opendir(path);
+	if(directory==NULL)
+		return -1;
 
 
-	if(!traverseFlag && !getMode()){ //not traversing and not in cmd mode
+	if(!traverseFlag && !getMode() && !scrollingFlag){ //not traversing and not in cmd mode
 		//inserting to history
 		if(indexx!=0 && indexx!=1){ // if . or .. is not pressed
 			string s_path=string(path);
@@ -112,19 +122,28 @@ int myLS(char path[PATH_MAX]){ //lists given directory
 
 		}
 
-		// if . is pressed, nothing is done.
-
 	}
 
-
-
-
-	//cout << "ls called!" << endl;
-	DIR *directory; // to open directory
+	
 	struct dirent *S_dirent; //dirent stucture
 	struct stat S_stat;
 
 	printf("\e[1;1H\e[2J"); //to clear screen
+	directoryItems.clear();
+
+
+
+
+	if( getMode() && gotoFlag){ //if in cmd mode and using goto option
+		//inserting to history
+		string s_path=string(path);
+		dirHistory.list.push_back(s_path);
+		dirHistory.curIndex++;
+	}
+
+
+	//cout << "ls called!" << endl;
+
 	
 
 	if(!scrollingFlag){ //what to do if cmd mode? think
@@ -132,17 +151,11 @@ int myLS(char path[PATH_MAX]){ //lists given directory
 		currentViewTopIndex=0;
 
 	}
-	//scrolling mode or cmd => path is current path
+
 	
 
-
-	directoryItems.clear();
-
-
-	char fullpath [PATH_MAX];
-	directory=opendir(path);
+	
 	mode_t permission;
-	// ** clear vector when traversing 
 	int i=0;
 	struct winsize S_windowsize;
 	ioctl(0, TIOCGWINSZ, &S_windowsize);
@@ -373,10 +386,10 @@ void processCmd(string cmd){
 
 	strcpy(c_cmd, cmd.c_str());
 	 //string test="sadlfjsadf  sdaflj";
-	int i=0;
+	int j=0;
 
-	for (substring = strtok(c_cmd, sep); substring; substring = strtok(NULL, sep), i++) {
-		if(i!=0){ //don't push ':'
+	for (substring = strtok(c_cmd, sep); substring; substring = strtok(NULL, sep), j++) {
+		if(j!=0){ //don't push ':'
 			cmdTokens.push_back(string(substring));
 		}
 
@@ -394,63 +407,174 @@ void processCmd(string cmd){
 
    
 
-	if(cmdTokens[0].compare("copy")==0){
-	for(int i=1;i<cmdTokens.size()-1;i++){
+	if(cmdTokens[0].compare("copy")==0)
+	{
+		for(int i=1;i<cmdTokens.size()-1;i++)
+		{
 			//destination directory
+			struct stat S_stat;
+			stat(cmdTokensAbs[i].c_str(),&S_stat);
+			mode_t permission = S_stat.st_mode;
+			if(S_ISDIR(permission))
+			{
+				string destination = cmdTokensAbs[cmdTokensAbs.size()-1];
+				char dest[PATH_MAX];
+				strcpy(dest, destination.c_str());
+				char source[PATH_MAX];
+				strcpy(source, cmdTokensAbs[i].c_str());
+				copy_dir(source,dest);
+				//cout << "copy done" << endl;
+
+			}
+			else
+			{
+					//appending file name to destination directory to create file/dir
+
+					string destination = cmdTokensAbs[cmdTokensAbs.size()-1]+"/"+cmdTokens[i];
+
+					char dest[PATH_MAX];
+					strcpy(dest, destination.c_str());
+					createFile(dest);
+					char source[PATH_MAX];
+					strcpy(source, cmdTokensAbs[i].c_str());
 
 
-		struct stat S_stat;
-
-		stat(cmdTokensAbs[i].c_str(),&S_stat);
-
-		mode_t permission = S_stat.st_mode;
-		if(S_ISDIR(permission)){
-			string destination = cmdTokensAbs[cmdTokensAbs.size()-1];
-			char dest[PATH_MAX];
-			strcpy(dest, destination.c_str());
-			char source[PATH_MAX];
-			strcpy(source, cmdTokensAbs[i].c_str());
-			copy_dir(source,dest);
-			cout << "copy done" << endl;
-
-
+					//cout << source << " to " << dest;
+					
+					singleFileCopy(source,dest);
+			}
+				//delete [] source, dest;
 		}
-		else{
-				//appending file name to destination directory to create file/dir
-
-			string destination = cmdTokensAbs[cmdTokensAbs.size()-1]+"/"+cmdTokens[i];
-
-			char dest[PATH_MAX];
-			strcpy(dest, destination.c_str());
-			createFile(dest);
-			char source[PATH_MAX];
-			strcpy(source, cmdTokensAbs[i].c_str());
 
 
-			cout << source << " to " << dest;
-			
-			singleFileCopy(source,dest);
-		}
-			//delete [] source, dest;
+
 	}
+	else if(cmdTokens[0].compare("delete_file")==0)
+	{ 
+		for(int i=1;i<cmdTokens.size();i++)
+		{ //each file specified
+			struct stat S_stat;
+			stat(cmdTokensAbs[i].c_str(),&S_stat);
+			mode_t permission = S_stat.st_mode;
+			char source[PATH_MAX];
+			strcpy(source, cmdTokensAbs[i].c_str());
+			//cout << source << " to " << dest;
+			if(!S_ISDIR(permission)) 
+				delete_file(source);
+				
+		}
 
 
+	}
+	else if(cmdTokens[0].compare("delete_dir")==0)
+	{ 
+		for(int i=1;i<cmdTokens.size();i++)
+		{ //each file specified
+			struct stat S_stat;
+			stat(cmdTokensAbs[i].c_str(),&S_stat);
+			mode_t permission = S_stat.st_mode;
+			char source[PATH_MAX];
+			strcpy(source, cmdTokensAbs[i].c_str());
+			//delete if it a directory
+			if(S_ISDIR(permission)) 
+				delete_dir(source);
+				
+		}
+	}
+	else if(cmdTokens[0].compare("create_file")==0)
+	{ 
+		for(int i=1;i<cmdTokens.size();i++)
+		{
+			struct stat S_stat;
+			stat(cmdTokensAbs[i].c_str(),&S_stat);
+			mode_t permission = S_stat.st_mode;
+			char source[PATH_MAX];
+			strcpy(source, cmdTokensAbs[i].c_str());
+			//delete if it a directory
+			
+			createFile(source);
+		}
 
-}
-else if(){
+	}
+	else if(cmdTokens[0].compare("create_dir")==0)
+	{ 
+		for(int i=1;i<cmdTokens.size();i++)
+		{
+			struct stat S_stat;
+			stat(cmdTokensAbs[i].c_str(),&S_stat);
+			mode_t permission = S_stat.st_mode;
+			char source[PATH_MAX];
+			strcpy(source, cmdTokensAbs[i].c_str());
+			//delete if it a directory
+			createDir(source);
+					
+		}
 
-}
+	}
+	else if(cmdTokens[0].compare("goto")==0)
+	{ 
+		if(cmdTokens.size() == 2){
+			char path[PATH_MAX];
+			strcpy(path,cmdTokensAbs[1].c_str());
+			gotoFlag=1;
+			myLS(path);
+			gotoFlag=0;
+		//	enterCmdMode();
+		}
+	}
+	else if(cmdTokens[0].compare("snapshot")==0)
+	{ 
+		if(cmdTokens.size() == 3){
+			char folder[PATH_MAX];
+			strcpy(folder,cmdTokensAbs[1].c_str());
+			char filePath[PATH_MAX];
+			strcpy(filePath,cmdTokensAbs[2].c_str());
+			snapShotHelper(folder,filePath);
+		//	enterCmdMode();
+		}
+	}
+	//move omitted
+	else if(cmdTokens[0].compare("move")==0)
+	{
+		for(int i=1;i<cmdTokens.size()-1;i++)
+		{ 
+		struct stat S_stat;
+			stat(cmdTokensAbs[i].c_str(),&S_stat);
+			mode_t permission = S_stat.st_mode;
+			if(S_ISDIR(permission))
+			{
+				string destination = cmdTokensAbs[cmdTokensAbs.size()-1];
+				char dest[PATH_MAX];
+				strcpy(dest, destination.c_str());
+				char source[PATH_MAX];
+				strcpy(source, cmdTokensAbs[i].c_str());
+				copy_dir(source,dest);
+				delete_dir(source);
 
+			}
+			else
+			{
+					//appending file name to destination directory to create file/dir
+				string destination = cmdTokensAbs[cmdTokensAbs.size()-1]+"/"+cmdTokens[i];
+				char destt[PATH_MAX];
+				strcpy(destt, destination.c_str());
+				createFile(destt);
+				char source[PATH_MAX];
+				strcpy(source, cmdTokensAbs[i].c_str());
+				singleFileCopy(source,destt);
+				delete_file(source);
+			}
+				//delete [] source, dest;
+		}
+	}
+	cmdTokens.clear();
+	cmdTokensAbs.clear();
 
-
-
-return;
-
-
+	return;
 }
 
 void convToAbsolute(){ //updated the vector cmdTokens
-	cmdTokensAbs.push_back("cmd"); //to match the indices b/w cmdToken and this
+	cmdTokensAbs.push_back(cmdTokens[0]); //to match the indices b/w cmdToken and this
 	for(int i=1;i<cmdTokens.size();i++){
 		string temp = cmdTokens[i];
 		if(temp[0]== '/'){
@@ -462,6 +586,14 @@ void convToAbsolute(){ //updated the vector cmdTokens
 			if(temp.size()>1)
 				cmdTokens[i]=temp.substr(1); //removing / so that only file name will be present
 
+		}
+		else if(temp[0]=='.' && temp[1]=='.'){
+			string currentDir =  dirHistory.list[dirHistory.curIndex];
+			int baseLength = currentDir.find_last_of("/");
+
+	
+			cmdTokensAbs.push_back(currentDir.substr(0,baseLength));
+			
 		}
 		else if(temp[0]=='~'){
 			char* t1=getRoot();
@@ -476,7 +608,7 @@ void convToAbsolute(){ //updated the vector cmdTokens
 		else if(temp[0]=='.'){
 			string currentDir =  dirHistory.list[dirHistory.curIndex];
 			cmdTokensAbs.push_back(currentDir+cmdTokens[i].substr(1));
-			if(temp.size()>1)
+			if(temp.size()>1) // if it is ./file1, /file1 will be place in cmdtoken
 				cmdTokens[i]=cmdTokens[i].substr(1); 
 
 
@@ -533,6 +665,19 @@ void enterCmdMode(){
 	myLS(path);//refresh
 
 }
+
+void exitCmdMode(){
+	char path[PATH_MAX];
+	//cout << "cmd mode" << endl;
+
+	string s =  dirHistory.list[dirHistory.curIndex];
+	strcpy(path,s.c_str());
+   // cout << path << endl;
+	
+	myLS(path);//refresh
+
+}
+
 
 
 
