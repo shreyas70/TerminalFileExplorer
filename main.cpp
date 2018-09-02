@@ -18,10 +18,15 @@ int getMode(){
     return mode;
 }
 
+void clearCmdBuffer(){
+    cmd_buffer=": ";
+}
 
 char * getRoot(){
     return root;
 }
+
+
 
 
 
@@ -124,8 +129,6 @@ int main(int argc, char const *argv[])
                         //cout << "works!" <<endl;
                         //at last row. More entries are there to display
 
-
-
                         incrCurrentViewTopIndex();
                         incrIndex();
                         setScrollingFlag(1);
@@ -160,17 +163,33 @@ int main(int argc, char const *argv[])
             }
                 //cmd mode
             else if(c==':'){
-                cmd_buffer+=":";
+                cmd_buffer+=": ";
                 mode=1; //setting cmd mode
                 enterCmdMode();
               
                 while(1){
                     c= getc(input);
                     if(c==27){
-                        cout << "esc!";
+                        cout << "Exiting cmd mode!";
                         mode=0; 
                         break;
-                    }else{
+                    }
+                    else if(c==127){
+                        //cout << "delete pressed!";
+                        if(cmd_buffer.size()>2){
+                        cmd_buffer=cmd_buffer.substr(0,cmd_buffer.size()-1);
+                        enterCmdMode();
+                         }
+
+                    }
+                    else if(c=='\n'){
+                        //cout << "enter pressed!";
+                        processCmd(cmd_buffer);
+                        cmd_buffer=": "; //clearing
+                        enterCmdMode(); //torefresh
+
+                    }
+                    else{
                         cmd_buffer+=c;
                         enterCmdMode();
                     }
@@ -178,7 +197,6 @@ int main(int argc, char const *argv[])
 
             }
         }
-
 
     }
     tcsetattr(fileno(input), TCSANOW, &initialTerimalSettings);

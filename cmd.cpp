@@ -1,26 +1,20 @@
-#include "utility.h"
-#include <fstream>      
-#include <cstdio>       
-#include <fcntl.h>
-#include <unistd.h>
-#include <queue>
-#include <ftw.h>
-#include <string.h>
+
+#include "cmd.h"
 
 //send full path file name then send. Source to dest
-int singleFileCopy (char * path1, char* path2) {
-	std::ifstream  from(path1, std::ios::binary);
-	std::ofstream  to(path2, std::ios::binary);
+int singleFileCopy ( char * source,  char* destination) {
+	std::ifstream  from(source, std::ios::binary);
+	std::ofstream  to(destination, std::ios::binary);
 
 	struct stat S_stat;
 	to << from.rdbuf();
 	//current user will own the file
 
-	stat(path1, &S_stat);
+	stat(source, &S_stat);
 
-	chmod(path2, S_stat.st_mode & 07777);
+	chmod(destination, S_stat.st_mode & 07777);
 	//cout << " " << S_password->pw_name << " ";
-	chown(path2,S_stat.st_uid, S_stat.st_gid);
+	chown(destination,S_stat.st_uid, S_stat.st_gid);
 	return 1;
 }
 
@@ -142,8 +136,8 @@ static int nftw_delete(const char *fpath, const struct stat *sb,int tflag, struc
 
 
 int delete_dir(char * path){
-	 if (nftw(path, nftw_delete, 20, FTW_DEPTH | FTW_PHYS ) == -1) {
-        perror("nftw");
+	 if (nftw(path, nftw_delete, 20, FTW_DEPTH ) == -1) {
+        cout << ("nftw error");
         return -1;
     }
     return 1;
@@ -187,7 +181,7 @@ static int nftw_copy(const char *fpath, const struct stat *sb,int tflag, struct 
 }
 
 
-//make shouldn't destination has a slash at the end
+// destination shouldn't  have a slash at the end
 int copy_dir(char * path1, char * destination){
 
 	//path1 will end with a directory
@@ -216,12 +210,12 @@ int copy_dir(char * path1, char * destination){
 
 // }
 
-	 int main()
-	 {
+	// int main()
+	// {
 	//singleFileCopy("","");
    // createFile("/Users/shreyas/Downloads/VB/GitHub/TerminalFileExplorer/created.txt");
 
-	//singleFileCopy("/Users/shreyas/Downloads/VB/GitHub/TerminalFileExplorer/p3.txt","p4.txt");
+	//singleFileCopy("/Users/shreyas/Downloads/VB/GitHub/TerminalFileExplorer/p2.txt","/Users/shreyas/Downloads/VB/GitHub/TerminalFileExplorer/WorkingDir/Dir1");
 
 	//delete_file("/Users/shreyas/Downloads/VB/GitHub/TerminalFileExplorer/CreatedDir");
 
@@ -233,12 +227,12 @@ int copy_dir(char * path1, char * destination){
 
 
 
-	copy_dir("/Users/shreyas/Downloads/VB/GitHub/TerminalFileExplorer/Dir1/Dir2","/Users/shreyas/Downloads/VB/GitHub/TerminalFileExplorer/Dir1/Dir3");
+	//copy_dir("/Users/shreyas/Downloads/VB/GitHub/TerminalFileExplorer/Dir1/Dir2","/Users/shreyas/Downloads/VB/GitHub/TerminalFileExplorer/Dir1/Dir3");
 
 	//createDir("/Users/shreyas/Downloads/VB/GitHub/TerminalFileExplorer/CreatedDir");
-	 	return 1;
+	 //	return 1;
 
-	 }
+	// }
 
 
 

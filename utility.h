@@ -21,3 +21,5 @@ char * getRoot();
 string getCmdBuffer();
 
 int getMode();
+
+void clearCmdBuffer();

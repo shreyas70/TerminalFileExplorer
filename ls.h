@@ -5,6 +5,8 @@
 #include <grp.h>
 #include <ctime>
 #include <vector>
+#include <string.h>
+#include "cmd.h"
 
 void leftArrowPressed();
 
@@ -13,12 +15,15 @@ int myLS(char []);
 void incrIndex();
 
 void decrIndex();
+void processCmd(string cmd);
 
 void showSelectedDir();
 
 void initializeHistory();
 
 void enterCmdMode();
+
+void convToAbsolute();
 
 void addToHistory(char []);
 
