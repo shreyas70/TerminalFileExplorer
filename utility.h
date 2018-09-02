@@ -8,7 +8,16 @@
 #include <stdlib.h>
 #include <vector>
 #include <sys/ioctl.h>
+#include <cstring>
+
+
+using namespace std;
 
 
 
 char * getRoot();
+
+
+string getCmdBuffer();
+
+int getMode();

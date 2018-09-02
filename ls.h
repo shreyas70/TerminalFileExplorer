@@ -18,6 +18,8 @@ void showSelectedDir();
 
 void initializeHistory();
 
+void enterCmdMode();
+
 void addToHistory(char []);
 
 int getCurrentViewTerminalLastRow();
@@ -46,5 +48,7 @@ int getCurrentViewTopIndex();
 char* getCurrentPath();
 
 void setScrollingFlag(int);
+
+
 
 

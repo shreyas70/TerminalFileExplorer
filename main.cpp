@@ -4,12 +4,26 @@
 #include <stdio.h>
 
 
+
 char root[PATH_MAX];
+
+string cmd_buffer="";
+int mode=0; //start in normal mode
+
+string getCmdBuffer(){
+    return cmd_buffer;
+}
+
+int getMode(){
+    return mode;
+}
 
 
 char * getRoot(){
     return root;
 }
+
+
 
 using namespace std;
 int main(int argc, char const *argv[])
@@ -29,10 +43,8 @@ int main(int argc, char const *argv[])
     myLS(root); //prints initial directory
     //currentPath=root;
     char c; //used to fetch char
+
     FILE* input;
-
-
-
     //setting non C mode and disabling echo
     struct termios initialTerimalSettings, newTerimalSettings;
     input = fopen("/dev/tty", "r");
@@ -51,6 +63,7 @@ int main(int argc, char const *argv[])
         cout << "switching on non C mode and disabling echo failed " << endl;
     }
     else{
+        //normal mode looop
         while(1){
             c= getc(input);
             if(c == 'q'){
@@ -67,7 +80,8 @@ int main(int argc, char const *argv[])
                 myLS(root);
 
             }
-            else if(c=='\033'){
+            //arrow key
+            else if(c=='\033'){ 
                 getc(input); 
                 switch(getc(input)) { 
                 case 'A': //up
@@ -81,7 +95,7 @@ int main(int argc, char const *argv[])
                     decrCurrentViewTopIndex();
                     decrIndex();
                     setScrollingFlag(2);
-                    myLS("random");
+                    myLS("");
                 }
                 else{
                     printf("\033[1A");
@@ -98,7 +112,7 @@ int main(int argc, char const *argv[])
                      // do nothing
                     //cout << "last item" ;
 
-                 }
+                }
                 else{
                     //checking if cursor is at the end of the terminal
 
@@ -111,18 +125,18 @@ int main(int argc, char const *argv[])
                         //at last row. More entries are there to display
 
 
-                     
+
                         incrCurrentViewTopIndex();
                         incrIndex();
-                         setScrollingFlag(1);
+                        setScrollingFlag(1);
                         // cout << getCurrentPath() << endl;
-                         myLS("random");
+                        myLS("");
 
                     }
                     else{
 
                         //cout << "not works!" <<endl;
-                     
+
                        printf("\033[1B"); 
                        incrIndex();
 
@@ -130,26 +144,78 @@ int main(int argc, char const *argv[])
 
                }
                break;
-                case 'C'://right
-                rightArrowPressed();
-                
+                    case 'C'://right
+                    rightArrowPressed();
+                    
 
 
-                break;
-                case 'D'://left
-                //traverseFlag
-                leftArrowPressed();
+                    break;
+                    case 'D'://left
+                    //traverseFlag
+                    leftArrowPressed();
 
 
-                break;
+                    break;
+                }
+            }
+                //cmd mode
+            else if(c==':'){
+                cmd_buffer+=":";
+                mode=1; //setting cmd mode
+                enterCmdMode();
+              
+                while(1){
+                    c= getc(input);
+                    if(c==27){
+                        cout << "esc!";
+                        mode=0; 
+                        break;
+                    }else{
+                        cmd_buffer+=c;
+                        enterCmdMode();
+                    }
+                }
+
             }
         }
 
+
     }
     tcsetattr(fileno(input), TCSANOW, &initialTerimalSettings);
-
-}
-
 return 0;
 }
+
+
+
+
+
+
+
+// void switchToCMDMode(){
+//     FILE* input;
+//     struct termios initialTerimalSettings, newTerimalSettings;
+//     cout << "switcing to cmd " <<endl;
+//     input = fopen("/dev/tty", "r");
+//     tcgetattr(fileno(input), &initialTerimalSettings);
+//     newTerimalSettings = initialTerimalSettings;
+//     newTerimalSettings.c_lflag &= ECHO;
+//     if(tcsetattr(fileno(input), TCSAFLUSH, &newTerimalSettings) != 0) { 
+//         cout << "switching to CMD mode failed " << endl;
+//     }
+//     return;
+// }
+
+// void switchToNormalMode(){
+//     FILE* input;
+//     struct termios initialTerimalSettings, newTerimalSettings;
+//     cout << "switcing to cmd " <<endl;
+//     input = fopen("/dev/tty", "r");
+//     tcgetattr(fileno(input), &initialTerimalSettings);
+//     newTerimalSettings = initialTerimalSettings;
+//     newTerimalSettings.c_lflag &= ~ECHO;
+//     if(tcsetattr(fileno(input), TCSAFLUSH, &newTerimalSettings) != 0) { 
+//         cout << "switching to normal mode failed " << endl;
+//     }
+//     return;
+// }
 

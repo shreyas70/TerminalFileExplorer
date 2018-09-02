@@ -10,13 +10,13 @@ struct history
 
 
 
-char currentPath[PATH_MAX];
+
 
 int curListLen=0;
 int currentViewTopIndex=0;
 int traverseFlag=0;
 int indexx=0; //the file on which cursor is present
-vector<string> vlist; //list is directories
+vector<string> directoryItems; //list is directories
 int scrollingFlag=0; //1 for down,2  for up
 //list
 int currentViewTerminalLastRow=0;
@@ -89,34 +89,23 @@ int getCurrentViewTopIndex(){
     return currentViewTopIndex;
 }
 
-char* getCurrentPath(){
-    return currentPath;
-}
 
 
-// char* getCurrentPath(){
-//     return currentPath;
-// }
-
-// char* setCurrentPath(char *a){
-//     strcpy(currentPath,a);
-//     //currentPath = a;
-
-// }
 
 
-int myLS(char path[]){ //lists current directory
+
+int myLS(char path[PATH_MAX]){ //lists given directory
 
 
-    if(!traverseFlag){
-             //inserting to history
+       //return 1;
+    
 
+    if(!traverseFlag && !getMode()){ //not traversing and not in cmd mode
+        //inserting to history
         if(indexx!=0 && indexx!=1){ // if . or .. is not pressed
             string s_path=string(path);
             dirHistory.list.push_back(s_path);
             dirHistory.curIndex++;
-
-
         }
         else if(indexx==1){ // .. is pressed
             dirHistory.curIndex--;
@@ -124,9 +113,6 @@ int myLS(char path[]){ //lists current directory
         }
 
         // if . is pressed, nothing is done.
-
-        
-    
 
     }
 
@@ -141,29 +127,16 @@ int myLS(char path[]){ //lists current directory
     printf("\e[1;1H\e[2J"); //to clear screen
     
 
-    if(!scrollingFlag){
+    if(!scrollingFlag){ //what to do if cmd mode? think
         indexx=0;
         currentViewTopIndex=0;
 
-    }else{
-        //do nothing
-        //path is current path
-      // path=currentPath;
-     strcpy(currentPath,path);
-      //cout << "works! top " <<currentViewTopIndex <<endl;
+    }
+    //scrolling mode or cmd => path is current path
+    
+   
 
- }
-
- vlist.clear();
-
-
-
-
-   //char path[PATH_MAX];
-
-   // if (getcwd(path, sizeof(path)) == NULL){
-   //  cout << "Current Path error" << endl;
-   // }
+ directoryItems.clear();
 
 
  char fullpath [PATH_MAX];
@@ -175,13 +148,8 @@ int myLS(char path[]){ //lists current directory
  ioctl(0, TIOCGWINSZ, &S_windowsize);
     //cout << S_windowsize.ws_col << endl;
  while((S_dirent=readdir(directory))!=NULL){
-
-        //update current path
-        //currentPath=path;
-    strcpy(currentPath,path);
-
         //consider adding full path here
-    vlist.push_back(S_dirent->d_name);
+    directoryItems.push_back(S_dirent->d_name);
         //i++;
     snprintf(fullpath, sizeof(fullpath), "%s/%s", path, S_dirent->d_name);
 
@@ -268,9 +236,7 @@ int myLS(char path[]){ //lists current directory
 
         }
 
-        struct passwd *S_password;
-        S_password = getpwuid(S_stat.st_uid);
-
+        
         printf(" \t %lld bytes ",S_stat.st_size);
 
 
@@ -282,6 +248,9 @@ int myLS(char path[]){ //lists current directory
         strftime(timbuf, sizeof(timbuf), "%c", &lt);
 
         cout << " " << timbuf << " ";
+        
+        struct passwd *S_password;
+        S_password = getpwuid(S_stat.st_uid);
         cout << " " << S_password->pw_name << " ";
 
        // cout << " userID " << S_stat.st_uid << " ";
@@ -294,26 +263,32 @@ int myLS(char path[]){ //lists current directory
         printf("\n");
     }
 
+    
+
     i++;
 
 }
     //cout << "while loop exited with i = " << i << endl;
-curListLen=vlist.size();
+curListLen=directoryItems.size();
 currentViewTerminalLastRow=S_windowsize.ws_row-2;
 
-    if(!scrollingFlag){ //new directory
+    if(!scrollingFlag && !getMode()){ //new directory
         printf("\033[0;0H"); //move cursoe to initial position
     }
-    else{ 
+    else if(getMode()){
 
+        //print string if cmd mode is activated
+        cout << getCmdBuffer() ;
+        //leave cursor there
 
+    }
+    else{ //scrolling
         if(scrollingFlag==1) // scrolling down.
             printf("\033[%d;0H",currentViewTerminalLastRow+1);
         else if(scrollingFlag==2) // scrolling up
             printf("\033[0;0H");
 
         scrollingFlag=0;
-
     }
     
 
@@ -325,7 +300,10 @@ currentViewTerminalLastRow=S_windowsize.ws_row-2;
 void showSelectedDir(){
 
     //if .. is pressed in root dir nothing should happen
-    if(strcmp(currentPath,getRoot())==0 && indexx==1)
+
+    string s = dirHistory.list[dirHistory.curIndex];
+
+    if(strcmp(s.c_str(),getRoot())==0 && indexx==1)
         return;
 
     //clearing if there is any unwanted stuff in history
@@ -338,14 +316,15 @@ void showSelectedDir(){
 
 
     char fullpath [PATH_MAX];
-    if (*currentPath == NULL){
-        cout << "Current Path error in ls.cpp" << endl;
-    }
-    string s =  vlist[indexx];
+   
+    s =  directoryItems[indexx];
     char fileName[PATH_MAX]; //will have the name of the file
     strcpy(fileName, s.c_str()); 
 
-    snprintf(fullpath, sizeof(fullpath), "%s/%s", currentPath, fileName);
+
+    //current file
+    s = dirHistory.list[dirHistory.curIndex];
+    snprintf(fullpath, sizeof(fullpath), "%s/%s",s.c_str(), fileName);
 
 
 
@@ -404,6 +383,20 @@ void rightArrowPressed(){
     }
     resetTraverseFlag();
 }
+
+void enterCmdMode(){
+    char path[PATH_MAX];
+    //cout << "cmd mode" << endl;;
+
+    string s =  dirHistory.list[dirHistory.curIndex];
+    strcpy(path,s.c_str());
+   // cout << path << endl;
+    
+    myLS(path);//refresh
+
+}
+
+
 
 
 
