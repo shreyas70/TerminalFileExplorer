@@ -92,7 +92,7 @@ int getCurrentViewTopIndex(){
 }
 
 
-
+//void printStatusBar(S_windowsize.ws_row)-2
 
 
 
@@ -160,7 +160,7 @@ int myLS(char path[PATH_MAX]){ //lists given directory with properties
 		directoryItems.push_back(S_dirent->d_name);
 		snprintf(fullpath, sizeof(fullpath), "%s/%s", path, S_dirent->d_name);
 
-		if(i>=currentViewTopIndex && i<((S_windowsize.ws_row)-1+currentViewTopIndex))
+		if(i>=currentViewTopIndex && i<((S_windowsize.ws_row)-2+currentViewTopIndex))
 		{ //to print only as many rows that can be viewed given teriminal size
 
 			//stat is used to fetch details about each directory item
@@ -266,9 +266,18 @@ int myLS(char path[PATH_MAX]){ //lists given directory with properties
 		i++;
 	}
 
+	
+
 
 	curListLen=directoryItems.size(); //used to implement scrolling
-	currentViewTerminalLastRow=S_windowsize.ws_row-2;
+	currentViewTerminalLastRow=S_windowsize.ws_row-3;
+
+	if(getMode()){
+		cout << "\e[1mCommand Mode\e[0m" <<endl;
+	}
+	else{
+		cout << "\e[1mNormal Mode\e[0m" <<endl ;
+	}
 
 	if(!scrollingFlag && !getMode()){ //new directory entered
 		printf("\033[0;0H"); //move cursor to initial position
@@ -287,6 +296,10 @@ int myLS(char path[PATH_MAX]){ //lists given directory with properties
 
 		scrollingFlag=0;
 	}
+
+	
+
+	//printStatusBar();
 	
 
 	closedir(directory);
@@ -482,7 +495,7 @@ void processCmd(string cmd){ //will be called when enter is pressed in cmd mode
 				//now ensuring that user cannot go out the application root using goto
 
 				int parentLength = cmdTokensAbs[1].find_last_of("/");
-				if(parentLength>=strlen(getRoot()))
+				if(parentLength>=strlen(getRoot()-1))
 				{ //if the absolule more is less than root length
 					gotoFlag=1;
 					myLS(path);

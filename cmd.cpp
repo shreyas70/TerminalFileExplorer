@@ -12,7 +12,6 @@ int singleFileCopy ( char * source,  char* destination) {
 	//current user will own the file
 
 	stat(source, &S_stat); //fetching metadata about file
-
 	//setting permission
 	// the last 4 octal digits of mode correspond to permissions
 	chmod(destination, S_stat.st_mode & 07777);
