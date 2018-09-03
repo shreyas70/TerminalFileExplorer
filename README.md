@@ -20,11 +20,9 @@ Create directory ‘:create_dir <dir_name> <destination_path>’
 
 delete_file <file_path>
 
-snapshot <folder> <dumpfile>
-  
-Goto <path>
-  
-  
+goto <path>
+snapshot <folder>
+ 
 From normal mode, press : to enter to command mode. Esc to exit command mode.
   
   
