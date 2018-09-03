@@ -2,10 +2,12 @@
 The objective is to develop terminal application to explore files in the system, without using any wrapper libraries.
 
 
-# Normal mode
-Can traverse using up arrow keys and enter. Can open files too. H for home and backspace to go back to previously visited directory
+## Normal mode
+Traverse using arrow keys and enter.
+Can open files too. Default application based on the file will launch
+H for home and backspace to go back to previously visited directory
 
-# Command mode 
+## Command mode 
 Copy ‘:copy <source_file(s)> <destination_directory>’ 
 Move ‘:move <source_file(s)> <destination_directory>’ 
 Rename ‘:rename <old_filename> <new_filename>’
