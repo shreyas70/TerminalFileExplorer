@@ -11,11 +11,17 @@ H for home and backspace to go back to previously visited directory
 Copy ‘:copy <source_file(s)> <destination_directory>’ 
 
 Move ‘:move <source_file(s)> <destination_directory>’ 
+
 Rename ‘:rename <old_filename> <new_filename>’
+
 Create file ‘:create_file <file_name> <destination_path>’
+
 Create directory ‘:create_dir <dir_name> <destination_path>’
+
 delete_file <file_path>
+
 snapshot <folder> <dumpfile>
+  
 Goto <path>
   
   
