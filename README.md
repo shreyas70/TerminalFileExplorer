@@ -18,10 +18,11 @@ Create file ‘:create_file <file_name> <destination_path>’
 
 Create directory ‘:create_dir <dir_name> <destination_path>’
 
-delete_file <file_path>
+delete_file file_path
 
-goto <path>
-snapshot <folder>
+goto path
+
+snapshot folder
  
 From normal mode, press : to enter to command mode. Esc to exit command mode.
   
