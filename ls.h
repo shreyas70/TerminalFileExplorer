@@ -3,6 +3,7 @@
 #include <pwd.h>
 #include <unistd.h>
 #include <grp.h>
+#include <stdio.h>
 #include <ctime>
 #include <vector>
 #include <string.h>
@@ -13,11 +14,14 @@ void leftArrowPressed();
 
 void exitCmdMode();
 
+void backSpacePressed();
+
 int myLS(char []);
 
 void incrIndex();
 
 void decrIndex();
+
 void processCmd(string cmd);
 
 void showSelectedDir();
@@ -38,7 +42,6 @@ void resetTraverseFlag();
 
 void incrIndex();
 
-
 int getIndex();
 
 void decrIndex();
@@ -46,7 +49,6 @@ void decrIndex();
 int getCurListLen();
 
 int incrCurrentViewTopIndex();
-
 
 
 void decrCurrentViewTopIndex();

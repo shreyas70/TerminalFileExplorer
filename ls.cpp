@@ -9,16 +9,12 @@ struct history
 };
 
 
-
-
-
 int curListLen=0;
 int currentViewTopIndex=0;
 int traverseFlag=0;
-int indexx=0; //the file on which cursor is present
+int cursorIndex=0; //the file on which cursor is present
 vector<string> directoryItems; //list is directories
 int scrollingFlag=0; //1 for down,2  for up
-//list
 int gotoFlag;
 int currentViewTerminalLastRow=0;
 
@@ -28,7 +24,7 @@ void initializeHistory(){
 }
 
 
-//to handle boundary case. indexx=0 but need to add to history
+//to add to history when new directory is visited
 void addToHistory(char path[]){
 	string s_path=string(path);
 	dirHistory.list.push_back(s_path);
@@ -36,13 +32,17 @@ void addToHistory(char path[]){
 }
 
 void setScrollingFlag(int a){
-	scrollingFlag=a; //1 for down, 2 for up
+	scrollingFlag=a; //1 for down, 2 for up. 
+	//To be able to differentiate up whether to move the list up or down
+
 }
 int getCurrentViewTerminalLastRow(){
+	//index of the file that is displayed on the last row currently
 	return currentViewTerminalLastRow;
 }
 
 void setTraverseFlag(){
+	//travsing through the history using arrow keys
 	traverseFlag=1; 
 }
 
@@ -51,16 +51,16 @@ void resetTraverseFlag(){
 }
 
 void incrIndex(){
-	indexx++;
+	cursorIndex++;
 }
 
 int getIndex(){
-	return indexx;
+	return cursorIndex;
 }
 
 void decrIndex(){
-	if(indexx>0){
-		indexx--;
+	if(cursorIndex>0){
+		cursorIndex--;
 	}
 	else{
 		cout << "Error. Index is 0";
@@ -70,10 +70,11 @@ void decrIndex(){
 int getCurListLen(){
 	return curListLen;
 }
+
 int incrCurrentViewTopIndex(){
+	//when the list needs to be refreshed on down arrow at last row
 	if(currentViewTopIndex>=0){
 		currentViewTopIndex++;
-	   // cout << "top indrecmented";
 		return 1;
 	}
 	else{
@@ -82,8 +83,8 @@ int incrCurrentViewTopIndex(){
 }
 
 void decrCurrentViewTopIndex(){
+	//when the list needs to be refreshed on up arrow at first row
 	currentViewTopIndex--;
-	//cout << "top indrecmented";
 }
 
 int getCurrentViewTopIndex(){
@@ -95,12 +96,12 @@ int getCurrentViewTopIndex(){
 
 
 
-int myLS(char path[PATH_MAX]){ //lists given directory
+int myLS(char path[PATH_MAX]){ //lists given directory with properties
 
-	if(scrollingFlag){
+	if(scrollingFlag){ //scroling with up and down => current dir is same
 		strcpy(path, dirHistory.list[dirHistory.curIndex].c_str());
 	}
-	//scrolling mode or cmd => path is current path
+
 	
 	DIR *directory; // to open directory
 
@@ -112,12 +113,13 @@ int myLS(char path[PATH_MAX]){ //lists given directory
 
 	if(!traverseFlag && !getMode() && !scrollingFlag){ //not traversing and not in cmd mode
 		//inserting to history
-		if(indexx!=0 && indexx!=1){ // if . or .. is not pressed
+		if(cursorIndex!=0 && cursorIndex!=1){ // if . or .. is not pressed
+			// addign to history
 			string s_path=string(path);
 			dirHistory.list.push_back(s_path);
 			dirHistory.curIndex++;
 		}
-		else if(indexx==1){ // .. is pressed
+		else if(cursorIndex==1){ // .. is pressed
 			dirHistory.curIndex--;
 
 		}
@@ -127,56 +129,46 @@ int myLS(char path[PATH_MAX]){ //lists given directory
 	
 	struct dirent *S_dirent; //dirent stucture
 	struct stat S_stat;
-
 	printf("\e[1;1H\e[2J"); //to clear screen
 	directoryItems.clear();
 
-
-
-
-	if( getMode() && gotoFlag){ //if in cmd mode and using goto option
+	if( getMode() && gotoFlag)
+	{ //if in cmd mode and using goto option
 		//inserting to history
 		string s_path=string(path);
 		dirHistory.list.push_back(s_path);
 		dirHistory.curIndex++;
 	}
 
-
-	//cout << "ls called!" << endl;
-
 	
 
-	if(!scrollingFlag){ //what to do if cmd mode? think
-		indexx=0;
+	if(!scrollingFlag) //reset indicies if not in scrolling mode
+	{
+		cursorIndex=0;
 		currentViewTopIndex=0;
-
 	}
 
-	
-
-	
 	mode_t permission;
-	int i=0;
-	struct winsize S_windowsize;
+	int i=0; //used to implement scrolling. index Variable for directory items
+	struct winsize S_windowsize; //used to fetch terminal size
 	ioctl(0, TIOCGWINSZ, &S_windowsize);
-	//cout << S_windowsize.ws_col << endl;
+
+	//S_dirent will have item name and inode 
 	while((S_dirent=readdir(directory))!=NULL){
-		//consider adding full path here
+
+		//directoryItems will contain the list of items of the currently visibly directory
 		directoryItems.push_back(S_dirent->d_name);
-		//i++;
 		snprintf(fullpath, sizeof(fullpath), "%s/%s", path, S_dirent->d_name);
 
-		if(i>=currentViewTopIndex && i<((S_windowsize.ws_row)-1+currentViewTopIndex)){ 
-			//print only if visible. 
-			//Otherwise just insert and find max length
+		if(i>=currentViewTopIndex && i<((S_windowsize.ws_row)-1+currentViewTopIndex))
+		{ //to print only as many rows that can be viewed given teriminal size
 
-			if (stat(fullpath,&S_stat) == -1) {
-		//printf(stderr, "stat failed: %s\n", strerror(errno));
+			//stat is used to fetch details about each directory item
+			if (stat(fullpath,&S_stat) == -1) { 
 				printf("stat error");
 				break;
 			}
 
-		//printing permission 
 			{
 
 				permission = S_stat.st_mode;
@@ -249,47 +241,39 @@ int myLS(char path[PATH_MAX]){ //lists given directory
 
 			}
 
-
+			//printing size
 			printf(" \t %lld bytes ",S_stat.st_size);
 
-
-		//time_t t = S_stat.st_mtime;
+			//printing modified time
 			time_t S_time=S_stat.st_ctime;
 			struct tm lt;
 			localtime_r(&S_time, &lt);
 			char timbuf[80];
 			strftime(timbuf, sizeof(timbuf), "%c", &lt);
-
 			cout << " " << timbuf << " ";
 
+			//printing user name fetched from /usr/bin/passwd file
 			struct passwd *S_password;
 			S_password = getpwuid(S_stat.st_uid);
 			cout << " " << S_password->pw_name << " ";
 
-	   // cout << " userID " << S_stat.st_uid << " ";
-
+			//printing group
 			struct group *g= getgrgid(S_stat.st_gid);
-		//S_password = getpwuid(S_stat.st_gid);
-		//cout << " " << S_password->pw_name << " ";
 			cout << " " << g->gr_name << " " ;
 			printf("\t %s ",S_dirent->d_name); 
 			printf("\n");
 		}
-
-
-
 		i++;
-
 	}
-	//cout << "while loop exited with i = " << i << endl;
-	curListLen=directoryItems.size();
+
+
+	curListLen=directoryItems.size(); //used to implement scrolling
 	currentViewTerminalLastRow=S_windowsize.ws_row-2;
 
-	if(!scrollingFlag && !getMode()){ //new directory
-		printf("\033[0;0H"); //move cursoe to initial position
+	if(!scrollingFlag && !getMode()){ //new directory entered
+		printf("\033[0;0H"); //move cursor to initial position
 	}
 	else if(getMode()){
-
 		//print string if cmd mode is activated
 		cout << getCmdBuffer() ;
 		//leave cursor there
@@ -313,24 +297,20 @@ int myLS(char path[PATH_MAX]){ //lists given directory
 void showSelectedDir(){
 
 	//if .. is pressed in root dir nothing should happen
-
 	string s = dirHistory.list[dirHistory.curIndex];
-
-	if(strcmp(s.c_str(),getRoot())==0 && indexx==1)
+	if(strcmp(s.c_str(),getRoot())==0 && cursorIndex==1)
 		return;
 
 	//clearing if there is any unwanted stuff in history
-	if(!traverseFlag){ // always true
+	if(!traverseFlag){ 
 		if(dirHistory.curIndex < dirHistory.list.size()-1){
 			dirHistory.list.erase(dirHistory.list.begin() + dirHistory.curIndex+1 ,dirHistory.list.end());
 		}
-
 	}
 
 
 	char fullpath [PATH_MAX];
-
-	s =  directoryItems[indexx];
+	s =  directoryItems[cursorIndex];
 	char fileName[PATH_MAX]; //will have the name of the file
 	strcpy(fileName, s.c_str()); 
 
@@ -342,116 +322,95 @@ void showSelectedDir(){
 
 
 	struct stat S_stat;
-	if (stat(fullpath,&S_stat) == -1) {
-		//printf(stderr, "stat failed: %s\n", strerror(errno));
+	if (stat(fullpath,&S_stat) == -1)
+	{
 		printf("stat error");
-
 	}
 
-		//printing permission 
 
-
-
+	//fetching permission 
 	mode_t permission = S_stat.st_mode;
 
-	if(!S_ISDIR(permission)){
+
+
+	//if it is a file, open it
+	if(!S_ISDIR(permission))
+	{
 		int pid = fork();
 		if (pid == 0) {
+			execl("/usr/bin/open", "open", fullpath, (char *)0);
+			exit(1);
+		}
+	}
+	else //open it if it is a directory
+	{
+		myLS(fullpath);
 
-		  execl("/usr/bin/open", "open", fullpath, (char *)0);
-		  exit(1);
-	  }
-  }
-  else{
-
-
-	myLS(fullpath);
-
-}
+	}
 }
 
 
-
+//used to process entered command. 
+//cmd tokens will contains the string tokens in the command
 vector<string> cmdTokens;
 vector<string> cmdTokensAbs;
 
-
-
-void processCmd(string cmd){
-	cout << "processing cmd " << endl;
+void processCmd(string cmd){ //will be called when enter is pressed in cmd mode
 	char c_cmd[PATH_MAX];
-	char *sep = " ";
+	char sep[] = " ";
 	char *substring;
-	char *last;
 
 	strcpy(c_cmd, cmd.c_str());
-	 //string test="sadlfjsadf  sdaflj";
 	int j=0;
 
 	for (substring = strtok(c_cmd, sep); substring; substring = strtok(NULL, sep), j++) {
-		if(j!=0){ //don't push ':'
+		if(j!=0)
+		{ //don't push token ':'
 			cmdTokens.push_back(string(substring));
 		}
-
 	}
-
-	// cout << " dest " << cmdTokens[size-1];
-
-
-
    convToAbsolute(); //updates the vector cmdTokens into absolute paths
 
 
+   //proccessing cmd
+   if(cmdTokens[0].compare("copy")==0)
+   {
+   	for(int i=1;i<cmdTokens.size()-1;i++)
+   	{
+		//to check if it is a directory or file
+   		struct stat S_stat;
+   		stat(cmdTokensAbs[i].c_str(),&S_stat);
+   		mode_t permission = S_stat.st_mode;
+   		if(S_ISDIR(permission))
+   		{
+   			string destination = cmdTokensAbs[cmdTokensAbs.size()-1];
+   			char dest[PATH_MAX];
+   			strcpy(dest, destination.c_str());
+   			char source[PATH_MAX];
+   			strcpy(source, cmdTokensAbs[i].c_str());
+   			copy_dir(source,dest);
 
-   //proccessing
-
-   
-
-	if(cmdTokens[0].compare("copy")==0)
-	{
-		for(int i=1;i<cmdTokens.size()-1;i++)
-		{
-			//destination directory
-			struct stat S_stat;
-			stat(cmdTokensAbs[i].c_str(),&S_stat);
-			mode_t permission = S_stat.st_mode;
-			if(S_ISDIR(permission))
-			{
-				string destination = cmdTokensAbs[cmdTokensAbs.size()-1];
-				char dest[PATH_MAX];
-				strcpy(dest, destination.c_str());
-				char source[PATH_MAX];
-				strcpy(source, cmdTokensAbs[i].c_str());
-				copy_dir(source,dest);
-				//cout << "copy done" << endl;
-
-			}
-			else
-			{
-					//appending file name to destination directory to create file/dir
-
-					string destination = cmdTokensAbs[cmdTokensAbs.size()-1]+"/"+cmdTokens[i];
-
-					char dest[PATH_MAX];
-					strcpy(dest, destination.c_str());
-					createFile(dest);
-					char source[PATH_MAX];
-					strcpy(source, cmdTokensAbs[i].c_str());
-
-
-					//cout << source << " to " << dest;
-					
-					singleFileCopy(source,dest);
-			}
-				//delete [] source, dest;
-		}
+   		}
+   		else
+   		{
+			//appending file name to destination directory to create file/dir
+   			string destination = cmdTokensAbs[cmdTokensAbs.size()-1]+"/"+cmdTokens[i];
+   			char dest[PATH_MAX];
+   			strcpy(dest, destination.c_str());
+   			createFile(dest);
+   			char source[PATH_MAX];
+   			strcpy(source, cmdTokensAbs[i].c_str());
+   			singleFileCopy(source,dest);
+   		}
+				
+   	}
 
 
 
-	}
-	else if(cmdTokens[0].compare("delete_file")==0)
-	{ 
-		for(int i=1;i<cmdTokens.size();i++)
+   }
+   else if(cmdTokens[0].compare("delete_file")==0)
+   { 
+   	for(int i=1;i<cmdTokens.size();i++)
 		{ //each file specified
 			struct stat S_stat;
 			stat(cmdTokensAbs[i].c_str(),&S_stat);
@@ -461,7 +420,7 @@ void processCmd(string cmd){
 			//cout << source << " to " << dest;
 			if(!S_ISDIR(permission)) 
 				delete_file(source);
-				
+
 		}
 
 
@@ -478,7 +437,7 @@ void processCmd(string cmd){
 			//delete if it a directory
 			if(S_ISDIR(permission)) 
 				delete_dir(source);
-				
+
 		}
 	}
 	else if(cmdTokens[0].compare("create_file")==0)
@@ -487,7 +446,6 @@ void processCmd(string cmd){
 		{
 			struct stat S_stat;
 			stat(cmdTokensAbs[i].c_str(),&S_stat);
-			mode_t permission = S_stat.st_mode;
 			char source[PATH_MAX];
 			strcpy(source, cmdTokensAbs[i].c_str());
 			//delete if it a directory
@@ -502,29 +460,41 @@ void processCmd(string cmd){
 		{
 			struct stat S_stat;
 			stat(cmdTokensAbs[i].c_str(),&S_stat);
-			mode_t permission = S_stat.st_mode;
 			char source[PATH_MAX];
 			strcpy(source, cmdTokensAbs[i].c_str());
 			//delete if it a directory
 			createDir(source);
-					
+
 		}
 
 	}
 	else if(cmdTokens[0].compare("goto")==0)
 	{ 
-		if(cmdTokens.size() == 2){
+		if(cmdTokens.size() == 2)
+		{
 			char path[PATH_MAX];
 			strcpy(path,cmdTokensAbs[1].c_str());
-			gotoFlag=1;
-			myLS(path);
-			gotoFlag=0;
-		//	enterCmdMode();
+			struct stat S_stat;
+			stat(cmdTokensAbs[1].c_str(),&S_stat);
+			mode_t permission = S_stat.st_mode;
+			if(S_ISDIR(permission)){ //if the dest if a directory
+
+				//now ensuring that user cannot go out the application root using goto
+
+				int parentLength = cmdTokensAbs[1].find_last_of("/");
+				if(parentLength>=strlen(getRoot()))
+				{ //if the absolule more is less than root length
+					gotoFlag=1;
+					myLS(path);
+					gotoFlag=0;
+				}
+			}
 		}
 	}
 	else if(cmdTokens[0].compare("snapshot")==0)
 	{ 
-		if(cmdTokens.size() == 3){
+		if(cmdTokens.size() == 3)
+		{
 			char folder[PATH_MAX];
 			strcpy(folder,cmdTokensAbs[1].c_str());
 			char filePath[PATH_MAX];
@@ -538,19 +508,23 @@ void processCmd(string cmd){
 	{
 		for(int i=1;i<cmdTokens.size()-1;i++)
 		{ 
-		struct stat S_stat;
+			struct stat S_stat;
 			stat(cmdTokensAbs[i].c_str(),&S_stat);
 			mode_t permission = S_stat.st_mode;
-			if(S_ISDIR(permission))
+			if(S_ISDIR(permission)) //source must be a dir
 			{
 				string destination = cmdTokensAbs[cmdTokensAbs.size()-1];
 				char dest[PATH_MAX];
 				strcpy(dest, destination.c_str());
 				char source[PATH_MAX];
 				strcpy(source, cmdTokensAbs[i].c_str());
-				copy_dir(source,dest);
-				delete_dir(source);
-
+				stat(destination.c_str(),&S_stat);
+				permission = S_stat.st_mode;
+				if(S_ISDIR(permission)) //destination also must be a dir
+				{
+					copy_dir(source,dest);
+					delete_dir(source);
+				}
 			}
 			else
 			{
@@ -561,10 +535,22 @@ void processCmd(string cmd){
 				createFile(destt);
 				char source[PATH_MAX];
 				strcpy(source, cmdTokensAbs[i].c_str());
-				singleFileCopy(source,destt);
-				delete_file(source);
+				stat(destination.c_str(),&S_stat);
+				permission = S_stat.st_mode;
+				if(S_ISDIR(permission)) //destination also must be a dir
+				{
+					singleFileCopy(source,destt);
+					delete_file(source);
+				}
+				
 			}
 				//delete [] source, dest;
+		}
+	}
+	else if(cmdTokens[0].compare("rename")==0){
+		if(cmdTokensAbs.size()==3)
+		{
+			rename(cmdTokensAbs[1].c_str(),cmdTokensAbs[2].c_str());
 		}
 	}
 	cmdTokens.clear();
@@ -591,7 +577,7 @@ void convToAbsolute(){ //updated the vector cmdTokens
 			string currentDir =  dirHistory.list[dirHistory.curIndex];
 			int baseLength = currentDir.find_last_of("/");
 
-	
+
 			cmdTokensAbs.push_back(currentDir.substr(0,baseLength));
 			
 		}
@@ -616,19 +602,14 @@ void convToAbsolute(){ //updated the vector cmdTokens
 		else{ //just file name
 			string currentDir = dirHistory.list[dirHistory.curIndex];
 			cmdTokensAbs.push_back(currentDir+"/"+cmdTokens[i]);
-
 		}
-
 	}
-
-
 }
 
 
 
 
-
-void leftArrowPressed(){
+void leftArrowPressed(){ //loading previously visited directory
 	setTraverseFlag();
 	if(dirHistory.curIndex > 0){
 		char path[PATH_MAX];
@@ -654,36 +635,34 @@ void rightArrowPressed(){
 	resetTraverseFlag();
 }
 
-void enterCmdMode(){
-	char path[PATH_MAX];
-	//cout << "cmd mode" << endl;
+void backSpacePressed(){ //in normal mode, go one directoroy up
+	string currentDirectory = dirHistory.list[dirHistory.curIndex]; //current dir
+	int baseLength = currentDirectory.find_last_of("/");
+	if(baseLength>=strlen(getRoot())) //making sure we don't go out of root dir
+	{
+		string s_path=currentDirectory.substr(0,baseLength);
+		dirHistory.list.push_back(s_path); //Store in history
+		dirHistory.curIndex++;
+		char path1[PATH_MAX]; //just for conversion purpose (from string to char*)
+		strcpy(path1,s_path.c_str());
+		myLS(path1);
+	}
 
+
+}
+
+void enterCmdMode(){ //just refreshes screen. Mode and cmdBuffer are set in main
+	char path[PATH_MAX];
 	string s =  dirHistory.list[dirHistory.curIndex];
 	strcpy(path,s.c_str());
-   // cout << path << endl;
-	
+	myLS(path);//refresh
+}
+
+void exitCmdMode(){//just refreshes screen. Mode is reset in in main
+	char path[PATH_MAX];
+	string s =  dirHistory.list[dirHistory.curIndex];
+	strcpy(path,s.c_str());
 	myLS(path);//refresh
 
 }
 
-void exitCmdMode(){
-	char path[PATH_MAX];
-	//cout << "cmd mode" << endl;
-
-	string s =  dirHistory.list[dirHistory.curIndex];
-	strcpy(path,s.c_str());
-   // cout << path << endl;
-	
-	myLS(path);//refresh
-
-}
-
-
-
-
-
-
-//will clear the screen, update the things
-// int myLS_givenPath(){
-
-// }
