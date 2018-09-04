@@ -1,6 +1,5 @@
 # TerminalFileExplorer
-The objective is to develop terminal application to explore files in the system, without using any wrapper libraries.
-
+This application is a terminal-based file explorer. It is implemented strictly using low level system calls. No wrapper functions have been used, only POSIX standard calls. The applications considers directory in which it is run as the root directory. The application operates in 2 modes - normal mode and command mode. In normal mode the user can nagitave the directories through arrows keys and enter key. In command mode, the user can type commands and perform operations like move, copy, create, delete and rename (file as well as directories).
 
 ## Normal mode
 Traverse using arrow keys and enter.
